@@ -35,7 +35,7 @@ python main.py
 
 | Username | Password | Role  |
 |----------|----------|-------|
-| admin    | admin123 | Owner |
+| admin    | Admin@2026 | Owner |
 
 **Change the password after first login via User Management.**
 
