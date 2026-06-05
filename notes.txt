@@ -1,0 +1,59 @@
+Cash Drawer: 
+It tracks the cashier's money at the start and end of each shift.
+
+Opening the Drawer
+The cashier enters how much physical cash is in the drawer at the start of their shift.
+This is recorded as opening_cash and the session status is set to open.
+While open, the Open button is disabled so they can't open it twice
+
+Closing the Shift
+The cashier physically counts the cash in the drawer and enters the amount.
+
+The system then automatically calculates:
+Expected Cash = opening_cash + total sales collected that day by that cashier.
+Discrepancy = physical count − expected amount
+
+If there's any discrepancy (short or over), it shows a warning.
+
+The session is then marked as closed
+
+Drawer History:
+Shows the last 20 sessions with: date, cashier name, opening, closing, expected, discrepancy, and status.
+Only the logged-in cashier's own open session is checked for status — so each cashier manages their own drawer.
+
+-----------------------------------------------------------------------------------------------
+
+Opening Cash
+No calculation — it's a manual entry
+The cashier physically counts the cash in the drawer at the start of the shift and types it in
+That number is saved as-is to opening_cash in the database
+
+Closing Cash
+Also no calculation — it's another manual entry
+At the end of the shift, the cashier physically counts all the cash again and types it in
+Saved as closing_cash
+
+Expected Cash
+This is the only one the system calculates automatically:
+
+expected = drawer["opening_cash"] + sales
+
+Where sales is pulled from the database:
+sales = conn.execute("""
+    SELECT COALESCE(SUM(total), 0) FROM sales_transactions
+    WHERE date(created_at) = date('now', 'localtime')
+    AND cashier_id = ?
+""", (self.user["id"],)).fetchone()[0]
+
+So in plain terms:
+Expected = Opening Cash + Total Sales collected today by that cashier
+
+Discrepancy:
+discrepancy = amount - expected
+Discrepancy = Closing Cash (physical count) − Expected Cash
+
+If the result is 0 → cash matches perfectly
+If negative → cash is short (money is missing)
+If positive → cash is over (more money than expected)
+
+------------------------------------------------------------------------------------------------------
